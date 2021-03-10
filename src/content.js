@@ -15,12 +15,16 @@ chrome.runtime.onConnect.addListener(function (port) {
 
         let userProfileImage = user.querySelector("img").src;
         let userName = user.querySelector("img").title;
+        let userOccupation = user.querySelector(
+          ".mn-connection-card__occupation"
+        ).innerText;
         return {
           ...obj,
           [userId]: {
             url: userProfileUrl,
             img: userProfileImage,
             name: userName,
+            occ: userOccupation,
           },
         };
       }, {});
