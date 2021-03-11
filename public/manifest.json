@@ -3,7 +3,13 @@
   "name": "Email Scrapper",
   "version": "0.1",
   "description": "Scrape email",
-  "permissions": ["tabs"],
+  "permissions": [
+    "tabs",
+    "storage",
+    "identity",
+    "https://www.linkedin.com/*",
+    "https://api.linkedin.com/*"
+  ],
   "background": {
     "scripts": ["static/js/background.js"],
     "persistent": false
