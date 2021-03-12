@@ -69,6 +69,7 @@ function Home() {
   return (
     <div className="App">
       <Navbar
+        isAuth={isAuth}
         isLoading={isLoading}
         handleOnClickUpdate={handleOnClickUpdate}
         handleOnClickLoading={handleOnClickLoading}

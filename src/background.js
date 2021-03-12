@@ -11,7 +11,7 @@ import {
 
 chrome.runtime.onConnect.addListener(function (port) {
   console.log("background");
-  console.assert(port.name == "email-scrapper");
+  console.assert(port.name === "email-scrapper");
   port.onMessage.addListener(function (msg) {
     console.log(msg);
     if (msg.to === "content") {

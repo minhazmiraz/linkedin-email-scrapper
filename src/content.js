@@ -28,7 +28,7 @@ const scrapLinkedInConnection = (port) => {
 
 chrome.runtime.onConnect.addListener(function (port) {
   console.log("content page");
-  console.assert(port.name == "email-scrapper");
+  console.assert(port.name === "email-scrapper");
   port.onMessage.addListener(function (msg) {
     console.log(msg);
     if (msg.query === "GET_USER_DATA") {
