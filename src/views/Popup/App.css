@@ -1,4 +1,8 @@
-body {
+.linkedin-tab {
   width: 450px;
   height: 450px;
+}
+.not-linkedin-tab {
+  width: 200px;
+  height: 100px;
 }

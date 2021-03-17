@@ -1,13 +1,72 @@
 import {
-  LINKEDIN_APP_CLIENT_ID,
-  LINKEDIN_APP_CLIENT_SECRET,
-  PROJECT_NAME,
-  REDIRECT_URI,
-} from "./views/Popup/common/constant";
-import {
   getDataFromStorage,
   setDataInStorage,
 } from "./views/Popup/common/utils";
+
+const msgToContent = (port, msg) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let tabPort = chrome.tabs.connect(tabs[0].id, {
+      name: "email-scrapper",
+    });
+    tabPort.postMessage(msg);
+    tabPort.onMessage.addListener(function (response) {
+      port.postMessage(response);
+    });
+  });
+};
+
+//TODO: fetch dependency
+const msgToBackground = (port, msg) => {
+  if (msg.query === "UPDATE_EMAIL") {
+    Object.entries(msg.data).forEach((user) => {
+      setTimeout(() => {
+        fetch(user[1].url + "detail/contact-info/")
+          .then((res) => res.text())
+          .then((res) => {
+            if (!res) return console.log(user[0], " response failed");
+            let jsonStr = res.match(
+              /(\n)(.*)&quot;emailAddress&quot;:&quot;(.*)(\n)/
+            );
+            //console.log(jsonStr);
+            if (!jsonStr) return console.log(user[0], " regex failed");
+            jsonStr = jsonStr[0];
+            if (!jsonStr) return console.log(user[0], " regex str failed");
+            let tempText = document.createElement("textarea");
+            tempText.innerHTML = jsonStr;
+            const emailAddress = JSON.parse(tempText.value).data.emailAddress;
+            const userId = user[0];
+
+            getDataFromStorage().then((storageResponse) => {
+              let storageData = {};
+              let usersProfile = {};
+
+              if (storageResponse) storageData = { ...storageResponse };
+              if (storageResponse && storageResponse.users_profile) {
+                usersProfile = {
+                  ...storageResponse.users_profile,
+                };
+              }
+
+              usersProfile = {
+                ...usersProfile,
+                [userId]: emailAddress,
+              };
+
+              storageData = {
+                ...storageData,
+                users_profile: usersProfile,
+              };
+
+              console.log(storageData);
+              setDataInStorage(storageData);
+            });
+          })
+          .catch((err) => console.log(err));
+      }, 1500);
+    });
+    port.postMessage({ message: "message received" });
+  }
+};
 
 chrome.runtime.onConnect.addListener(function (port) {
   console.log("background");
@@ -15,82 +74,9 @@ chrome.runtime.onConnect.addListener(function (port) {
   port.onMessage.addListener(function (msg) {
     console.log(msg);
     if (msg.to === "content") {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        let tabPort = chrome.tabs.connect(tabs[0].id, {
-          name: "email-scrapper",
-        });
-        tabPort.postMessage(msg);
-        tabPort.onMessage.addListener(function (response) {
-          port.postMessage(response);
-        });
-      });
+      msgToContent(port, msg);
     } else if (msg.to === "background") {
-      if (msg.query === "GET_ACCESS_TOKEN") {
-        chrome.identity.launchWebAuthFlow(
-          {
-            url:
-              "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=" +
-              LINKEDIN_APP_CLIENT_ID +
-              "&redirect_uri=" +
-              REDIRECT_URI +
-              "&state=" +
-              PROJECT_NAME +
-              "&scope=r_liteprofile%20r_emailaddress",
-            interactive: true,
-          },
-          function (redirect_url) {
-            let parser = document.createElement("a");
-            parser.href = redirect_url;
-            const urlParams = new URLSearchParams(parser.search);
-            const code = urlParams.get("code");
-            const state = urlParams.get("state");
-
-            console.log("code: ", code);
-
-            if (state === PROJECT_NAME && code) {
-              fetch("https://www.linkedin.com/oauth/v2/accessToken", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body:
-                  "grant_type=authorization_code&code=" +
-                  code +
-                  "&redirect_uri=" +
-                  REDIRECT_URI +
-                  "&client_id=" +
-                  LINKEDIN_APP_CLIENT_ID +
-                  "&client_secret=" +
-                  LINKEDIN_APP_CLIENT_SECRET,
-              })
-                .then((res) => res.json())
-                .then((res) => {
-                  console.log(res);
-                  if (res.access_token) {
-                    getDataFromStorage().then((storageResponse) => {
-                      let storageData = {};
-                      if (storageResponse) {
-                        storageData = {
-                          ...storageResponse,
-                          linkedin_access_token: res,
-                        };
-                      } else {
-                        storageData = {
-                          linkedin_access_token: res,
-                        };
-                      }
-                      setDataInStorage(storageData);
-                    });
-                  }
-                });
-            } else if (state === PROJECT_NAME) {
-              const error = urlParams.get("error");
-              console.log(error);
-              //if (error) port.postMessage({ error: "Authentication Error" });
-            }
-          }
-        );
-      }
+      msgToBackground(port, msg);
     }
   });
 });

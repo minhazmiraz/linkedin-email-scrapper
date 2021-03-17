@@ -1,84 +1,90 @@
 import React, { useEffect, useState } from "react";
-import {
-  isAuthenticated,
-  sentMessageToBackground,
-  getDataFromStorage,
-} from "../common/utils";
-import Body from "./Body";
-import Navbar from "./Navbar";
+import { LINKEDIN_CONNECTION_URL } from "../common/constant";
+import { sentMessageToBackground, getDataFromStorage } from "../common/utils";
+import LinkedInTab from "./LinkedInTab";
+import NotLinkedInTab from "./NotLinkedInTab";
 
 function Home() {
   const [usersProfile, setUsersProfile] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAuth, setIsAuth] = useState(false);
+  const [savedUsersProfile, setSavedUsersProfile] = useState({});
+  const [unsavedUsersProfile, setUnsavedUsersProfile] = useState({});
   const [storageData, setStorageData] = useState({});
+  const [isLinkedInTab, setIsLinkedInTab] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleOnClickLoading = () => {
+  const getCurrentTabUrl = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0].url.indexOf(LINKEDIN_CONNECTION_URL) !== -1) {
+        setIsLinkedInTab(true);
+      }
+    });
+  };
+
+  //TODO: filter saved and unsaved data
+  const filterUsersProfile = () => {
+    let [saved, unsaved] = Object.entries(usersProfile).reduce(
+      ([saved, unsaved], user) => {
+        let email = storageData.users_profile[user[0]];
+        return email
+          ? [{ ...saved, [user[0]]: { ...user[1], email } }, unsaved]
+          : [saved, { ...unsaved, [user[0]]: { ...user[1] } }];
+      },
+      [{}, {}]
+    );
+    console.log(saved, unsaved);
+    setSavedUsersProfile(saved);
+    setUnsavedUsersProfile(unsaved);
+    setUsersProfile({ ...usersProfile, ...saved });
+  };
+
+  const handleOnClickRefresh = () => {
     setIsLoading(true);
     console.log("popup refresh clicked");
     const payload = { to: "content", query: "GET_USER_DATA" };
     sentMessageToBackground(payload, (response) => {
       //console.log(response);
       setUsersProfile({ ...response, ...usersProfile });
+      //filterUsersProfile();
       setIsLoading(false);
     });
   };
 
   const handleOnClickUpdate = () => {
-    Object.entries(usersProfile).forEach((user) => {
-      setTimeout(() => {
-        fetch(
-          new Request(user[1].url + "detail/contact-info/", {
-            method: "GET",
-            headers: new Headers({ "Access-Control-Allow-Origin": "*" }),
-          })
-        )
-          .then((response) => response.text())
-          .then((response) => {
-            console.log(response);
-            const doc = new DOMParser().parseFromString(response, "text/html");
-            console.log(doc);
-            const email = doc.querySelector("[href^=mailto]");
-            console.log("email ", email);
-            setUsersProfile({
-              ...usersProfile,
-              [user[0]]: { ...user[1], email: email.href },
-            });
-          })
-          .catch((err) => console.log(err));
-      }, 300);
-    });
-  };
-
-  const handleAuthentication = () => {
     sentMessageToBackground(
-      { to: "background", query: "GET_ACCESS_TOKEN" },
+      { to: "background", query: "UPDATE_EMAIL", data: usersProfile },
       (res) => console.log(res)
     );
   };
 
   useEffect(() => {
+    getCurrentTabUrl();
     getDataFromStorage().then((res) => {
-      if (res) setStorageData(res);
-      setIsAuth(isAuthenticated(res));
+      if (res) {
+        setStorageData(res);
+      }
     });
   }, []);
 
-  console.log(storageData, isAuth);
+  useEffect(() => {
+    if (isLinkedInTab) handleOnClickRefresh();
+  }, [isLinkedInTab]);
+
+  console.log(storageData);
 
   return (
     <div className="App">
-      <Navbar
-        isAuth={isAuth}
-        isLoading={isLoading}
-        handleOnClickUpdate={handleOnClickUpdate}
-        handleOnClickLoading={handleOnClickLoading}
-      />
-      <Body
-        isAuth={isAuth}
-        usersProfile={usersProfile}
-        handleAuthentication={handleAuthentication}
-      />
+      {isLinkedInTab && Object.entries(usersProfile).length > 0 ? (
+        <LinkedInTab
+          isLoading={isLoading}
+          usersProfile={usersProfile}
+          savedUsersProfile={savedUsersProfile}
+          unsavedUsersProfile={unsavedUsersProfile}
+          handleOnClickUpdate={handleOnClickUpdate}
+          handleOnClickRefresh={handleOnClickRefresh}
+        />
+      ) : (
+        <NotLinkedInTab />
+      )}
     </div>
   );
 }

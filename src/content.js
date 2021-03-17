@@ -22,7 +22,7 @@ const scrapLinkedInConnection = (port) => {
       },
     };
   }, {});
-  //console.log(scrapData);
+  console.log(scrapeData);
   port.postMessage(scrapeData);
 };
 
