@@ -2,6 +2,7 @@ import {
   AppBar,
   Avatar,
   Card,
+  CardContent,
   CardHeader,
   Chip,
   List,
@@ -9,11 +10,14 @@ import {
   Toolbar,
 } from "@material-ui/core";
 import { RefreshOutlined, UpdateOutlined } from "@material-ui/icons";
+import { useEffect } from "react";
 
 const LinkedInTab = (props) => {
   const {
     isLoading,
     usersProfile,
+    savedUsersProfile,
+    unsavedUsersProfile,
     handleOnClickUpdate,
     handleOnClickRefresh,
   } = props;
@@ -32,12 +36,7 @@ const LinkedInTab = (props) => {
           <Chip
             size="small"
             avatar={
-              <Avatar>
-                {Object.values(usersProfile).reduce(
-                  (r, o) => (r += !o["email"]),
-                  0
-                )}
-              </Avatar>
+              <Avatar>{Object.entries(unsavedUsersProfile).length}</Avatar>
             }
             label="profile not updated"
             color="secondary"
@@ -46,6 +45,7 @@ const LinkedInTab = (props) => {
             style={{ margin: ["0px", "2px", "0px", "2px"] }}
           />
           <Chip
+            id="refresh-chip"
             size="small"
             label={isLoading ? "Refreshing..." : "Refresh"}
             color="primary"
@@ -53,7 +53,6 @@ const LinkedInTab = (props) => {
             onDelete={handleOnClickRefresh}
             deleteIcon={<RefreshOutlined />}
             style={{ margin: ["0px", "5px", "0px", "2px"] }}
-            disabled={isLoading ? "true" : "false"}
           />
         </Toolbar>
       </AppBar>
@@ -72,11 +71,30 @@ const LinkedInTab = (props) => {
                 title={<b> {user.name} </b>}
                 subheader={user.occ}
               />
+              {user.email !== undefined && (
+                <center>
+                  <CardContent>
+                    <Chip
+                      size="small"
+                      label={user.email ? user.email : "Email not found"}
+                      color="primary"
+                    />
+                  </CardContent>
+                </center>
+              )}
             </Card>
           </ListItem>
         ))}
     </List>
   );
+
+  useEffect(() => {
+    if (isLoading) {
+      document.getElementById("refresh-chip").setAttribute("disabled", "");
+    } else {
+      document.getElementById("refresh-chip").removeAttribute("disabled");
+    }
+  }, [isLoading]);
 
   return (
     Object.entries(usersProfile).length > 0 && (

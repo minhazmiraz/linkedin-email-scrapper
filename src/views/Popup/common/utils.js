@@ -28,6 +28,15 @@ export const setDataInStorage = (value) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({ [key]: value }, (res) => {
       console.log("Value set ", value);
+      resolve(null);
     });
   });
+};
+
+export const addStorageChangeListener = (listener) => {
+  chrome.storage.onChanged.addListener(listener);
+};
+
+export const removeStorageChangeListener = (listener) => {
+  chrome.storage.onChanged.removeListener(listener);
 };

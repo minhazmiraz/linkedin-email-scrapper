@@ -3,6 +3,61 @@ import {
   setDataInStorage,
 } from "./views/Popup/common/utils";
 
+const detectEmailUsingRegex = (res, user) => {
+  if (!res) return console.log(user[0], " response failed") || null;
+  let jsonStr = res.match(/(\n)(.*)&quot;emailAddress&quot;:&quot;(.*)(\n)/);
+  //console.log(jsonStr);
+  if (!jsonStr) return console.log(user[0], " regex failed") || null;
+  jsonStr = jsonStr[0];
+  if (!jsonStr) return console.log(user[0], " regex str failed") || null;
+  let tempText = document.createElement("textarea");
+  tempText.innerHTML = jsonStr;
+  return JSON.parse(tempText.value).data.emailAddress;
+};
+
+const fetchEmail = (position, usersProfile) => {
+  let user = usersProfile[position];
+  setTimeout(() => {
+    fetch(user[1].url + "detail/contact-info/")
+      .then((res) => res.text())
+      .then((res) => {
+        const emailAddress = detectEmailUsingRegex(res, user);
+        const userId = user[0];
+
+        getDataFromStorage().then((storageResponse) => {
+          let storageData = {};
+          let users_profile = {};
+
+          if (storageResponse) storageData = { ...storageResponse };
+          if (storageResponse && storageResponse.users_profile) {
+            users_profile = {
+              ...storageResponse.users_profile,
+            };
+          }
+
+          users_profile = {
+            ...users_profile,
+            [userId]: emailAddress,
+          };
+
+          storageData = {
+            ...storageData,
+            users_profile: users_profile,
+          };
+
+          console.log(storageData);
+          setDataInStorage(storageData).then((res) => {
+            console.log("calling new fetch", position, usersProfile);
+            if (position + 1 < usersProfile.length) {
+              fetchEmail(position + 1, usersProfile);
+            }
+          });
+        });
+      })
+      .catch((err) => console.log(err));
+  }, 500);
+};
+
 const msgToContent = (port, msg) => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     let tabPort = chrome.tabs.connect(tabs[0].id, {
@@ -15,56 +70,10 @@ const msgToContent = (port, msg) => {
   });
 };
 
-//TODO: fetch dependency
 const msgToBackground = (port, msg) => {
   if (msg.query === "UPDATE_EMAIL") {
-    Object.entries(msg.data).forEach((user) => {
-      setTimeout(() => {
-        fetch(user[1].url + "detail/contact-info/")
-          .then((res) => res.text())
-          .then((res) => {
-            if (!res) return console.log(user[0], " response failed");
-            let jsonStr = res.match(
-              /(\n)(.*)&quot;emailAddress&quot;:&quot;(.*)(\n)/
-            );
-            //console.log(jsonStr);
-            if (!jsonStr) return console.log(user[0], " regex failed");
-            jsonStr = jsonStr[0];
-            if (!jsonStr) return console.log(user[0], " regex str failed");
-            let tempText = document.createElement("textarea");
-            tempText.innerHTML = jsonStr;
-            const emailAddress = JSON.parse(tempText.value).data.emailAddress;
-            const userId = user[0];
-
-            getDataFromStorage().then((storageResponse) => {
-              let storageData = {};
-              let usersProfile = {};
-
-              if (storageResponse) storageData = { ...storageResponse };
-              if (storageResponse && storageResponse.users_profile) {
-                usersProfile = {
-                  ...storageResponse.users_profile,
-                };
-              }
-
-              usersProfile = {
-                ...usersProfile,
-                [userId]: emailAddress,
-              };
-
-              storageData = {
-                ...storageData,
-                users_profile: usersProfile,
-              };
-
-              console.log(storageData);
-              setDataInStorage(storageData);
-            });
-          })
-          .catch((err) => console.log(err));
-      }, 1500);
-    });
     port.postMessage({ message: "message received" });
+    fetchEmail(0, Object.entries(msg.data));
   }
 };
 

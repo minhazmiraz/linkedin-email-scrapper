@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { LINKEDIN_CONNECTION_URL } from "../common/constant";
-import { sentMessageToBackground, getDataFromStorage } from "../common/utils";
+import { LINKEDIN_CONNECTION_URL, PROJECT_NAME } from "../common/constant";
+import {
+  sentMessageToBackground,
+  getDataFromStorage,
+  removeStorageChangeListener,
+  addStorageChangeListener,
+} from "../common/utils";
 import LinkedInTab from "./LinkedInTab";
 import NotLinkedInTab from "./NotLinkedInTab";
 
@@ -20,21 +25,41 @@ function Home() {
     });
   };
 
-  //TODO: filter saved and unsaved data
   const filterUsersProfile = () => {
-    let [saved, unsaved] = Object.entries(usersProfile).reduce(
+    console.log("filter started", usersProfile, storageData);
+    let input =
+      Object.keys(savedUsersProfile).length +
+        Object.keys(unsavedUsersProfile).length ===
+      Object.keys(usersProfile).length
+        ? unsavedUsersProfile
+        : usersProfile;
+
+    let [saved, unsaved] = Object.entries(input).reduce(
       ([saved, unsaved], user) => {
         let email = storageData.users_profile[user[0]];
-        return email
+        return email !== undefined
           ? [{ ...saved, [user[0]]: { ...user[1], email } }, unsaved]
           : [saved, { ...unsaved, [user[0]]: { ...user[1] } }];
       },
       [{}, {}]
     );
-    console.log(saved, unsaved);
-    setSavedUsersProfile(saved);
-    setUnsavedUsersProfile(unsaved);
-    setUsersProfile({ ...usersProfile, ...saved });
+    console.log("filter done", saved, unsaved);
+    if (Object.keys(saved).length > 0) {
+      setSavedUsersProfile({ ...savedUsersProfile, ...saved });
+      setUnsavedUsersProfile({ ...unsaved });
+      setUsersProfile({ ...usersProfile, ...saved });
+    }
+  };
+
+  const storageChangeListener = (changes, area) => {
+    if (area === "local" && PROJECT_NAME in changes) {
+      console.log(
+        "new storage change",
+        changes[PROJECT_NAME].newValue,
+        changes[PROJECT_NAME].oldValue
+      );
+      setStorageData(changes[PROJECT_NAME].newValue);
+    }
   };
 
   const handleOnClickRefresh = () => {
@@ -44,14 +69,13 @@ function Home() {
     sentMessageToBackground(payload, (response) => {
       //console.log(response);
       setUsersProfile({ ...response, ...usersProfile });
-      //filterUsersProfile();
       setIsLoading(false);
     });
   };
 
   const handleOnClickUpdate = () => {
     sentMessageToBackground(
-      { to: "background", query: "UPDATE_EMAIL", data: usersProfile },
+      { to: "background", query: "UPDATE_EMAIL", data: unsavedUsersProfile },
       (res) => console.log(res)
     );
   };
@@ -63,13 +87,26 @@ function Home() {
         setStorageData(res);
       }
     });
+    addStorageChangeListener(storageChangeListener);
+
+    return () => removeStorageChangeListener(storageChangeListener);
   }, []);
 
   useEffect(() => {
     if (isLinkedInTab) handleOnClickRefresh();
   }, [isLinkedInTab]);
 
-  console.log(storageData);
+  useEffect(() => {
+    console.log("useEffect: ", usersProfile, storageData);
+    if (
+      Object.keys(usersProfile).length > 0 &&
+      Object.keys(storageData).length > 0
+    ) {
+      filterUsersProfile();
+    }
+  }, [usersProfile, storageData]);
+
+  console.log("home: ", savedUsersProfile, unsavedUsersProfile);
 
   return (
     <div className="App">
