@@ -35,14 +35,12 @@ const fetchEmail = (position, usersProfile) => {
             };
           }
 
-          users_profile = {
-            ...users_profile,
-            [userId]: emailAddress,
-          };
-
           storageData = {
             ...storageData,
-            users_profile: users_profile,
+            users_profile: {
+              ...users_profile,
+              [userId]: { ...user[1], email: emailAddress },
+            },
           };
 
           console.log(storageData);
@@ -50,11 +48,30 @@ const fetchEmail = (position, usersProfile) => {
             console.log("calling new fetch", position, usersProfile);
             if (position + 1 < usersProfile.length) {
               fetchEmail(position + 1, usersProfile);
+            } else {
+              getDataFromStorage().then((storageResponse) => {
+                setDataInStorage({
+                  ...storageResponse,
+                  is_emails_updating: false,
+                });
+              });
             }
           });
         });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        if (position + 1 < usersProfile.length) {
+          fetchEmail(position + 1, usersProfile);
+        } else {
+          getDataFromStorage().then((storageResponse) => {
+            setDataInStorage({
+              ...storageResponse,
+              is_emails_updating: false,
+            });
+          });
+        }
+      });
   }, 500);
 };
 
@@ -73,7 +90,16 @@ const msgToContent = (port, msg) => {
 const msgToBackground = (port, msg) => {
   if (msg.query === "UPDATE_EMAIL") {
     port.postMessage({ message: "message received" });
-    fetchEmail(0, Object.entries(msg.data));
+    getDataFromStorage().then((storageResponse) => {
+      if (!storageResponse || !storageResponse.is_emails_updating) {
+        setDataInStorage({
+          ...storageResponse,
+          is_emails_updating: true,
+        }).then((res) => {
+          fetchEmail(0, Object.entries(msg.data));
+        });
+      }
+    });
   }
 };
 

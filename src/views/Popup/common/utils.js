@@ -40,3 +40,14 @@ export const addStorageChangeListener = (listener) => {
 export const removeStorageChangeListener = (listener) => {
   chrome.storage.onChanged.removeListener(listener);
 };
+
+export const exportAsCSV = (csvContent) => {
+  let encodedUri =
+    "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+  let link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", PROJECT_NAME + "_profile_data.csv");
+  document.body.appendChild(link);
+
+  link.click();
+};

@@ -1,108 +1,279 @@
 import {
   AppBar,
   Avatar,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
+  Badge,
+  CircularProgress,
+  Fab,
   List,
   ListItem,
+  ListItemAvatar,
+  ListItemText,
+  makeStyles,
   Toolbar,
+  Typography,
 } from "@material-ui/core";
-import { RefreshOutlined, UpdateOutlined } from "@material-ui/icons";
-import { useEffect } from "react";
+import {
+  GetAppRounded,
+  RefreshOutlined,
+  UpdateOutlined,
+} from "@material-ui/icons";
+import React, { useEffect } from "react";
+import { exportAsCSV } from "../common/utils";
 
 const LinkedInTab = (props) => {
   const {
     isLoading,
+    isUpdating,
+    isLinkedInTab,
     usersProfile,
     savedUsersProfile,
     unsavedUsersProfile,
+    storageData,
+    bottomNavigationValue,
     handleOnClickUpdate,
     handleOnClickRefresh,
   } = props;
 
-  const navbar = (
-    <div>
-      <AppBar color="default" position="fixed">
-        <Toolbar>
-          <Chip
-            size="small"
-            avatar={<Avatar>{Object.entries(usersProfile).length}</Avatar>}
-            label="profile found"
-            color="primary"
-            style={{ margin: ["0px", "2px", "0px", "5px"] }}
-          />
-          <Chip
-            size="small"
-            avatar={
-              <Avatar>{Object.entries(unsavedUsersProfile).length}</Avatar>
-            }
-            label="profile not updated"
-            color="secondary"
-            onDelete={handleOnClickUpdate}
-            deleteIcon={<UpdateOutlined />}
-            style={{ margin: ["0px", "2px", "0px", "2px"] }}
-          />
-          <Chip
-            id="refresh-chip"
-            size="small"
-            label={isLoading ? "Refreshing..." : "Refresh"}
-            color="primary"
-            onClick={handleOnClickRefresh}
-            onDelete={handleOnClickRefresh}
-            deleteIcon={<RefreshOutlined />}
-            style={{ margin: ["0px", "5px", "0px", "2px"] }}
-          />
-        </Toolbar>
-      </AppBar>
-      <Toolbar />
-    </div>
-  );
+  const handleExportProfileData = () => {
+    let replaceChar = (match) => (match === "," ? " | " : " ");
 
-  const populateUsers = (
+    let csvContent = "NAME,EMAIL,OCCUPATION,LINK,\n";
+    csvContent += Object.entries(storageData.users_profile)
+      .map(
+        (profile) =>
+          profile[1].name.replace(/[,\n]/g, replaceChar) +
+          "," +
+          profile[1].email +
+          "," +
+          profile[1].occ.replace(/[,\n]/g, replaceChar) +
+          "," +
+          "https://www.linkedin.com/in/" +
+          profile[0].replace(/[,\n]/g, replaceChar) +
+          ","
+      )
+      .join("\n");
+
+    console.log(csvContent);
+    exportAsCSV(csvContent);
+  };
+
+  const populateUsers = (profiles) => (
     <List component="ul">
       {usersProfile &&
-        Object.values(usersProfile).map((user) => (
+        Object.values(profiles).map((user) => (
           <ListItem>
-            <Card raised="true" style={{ width: "100%" }}>
-              <CardHeader
-                avatar={<Avatar src={user.img} />}
-                title={<b> {user.name} </b>}
-                subheader={user.occ}
-              />
-              {user.email !== undefined && (
-                <center>
-                  <CardContent>
-                    <Chip
-                      size="small"
-                      label={user.email ? user.email : "Email not found"}
-                      color="primary"
-                    />
-                  </CardContent>
-                </center>
-              )}
-            </Card>
+            <ListItemAvatar>
+              <Avatar src={user.img} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={<b>{user.name}</b>}
+              secondary={
+                <span>
+                  {user.email !== undefined && (
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      color="textPrimary"
+                      display="inline"
+                    >
+                      {(user.email ? user.email : "Email Not Found") + " - "}
+                    </Typography>
+                  )}
+                  {user.occ}
+                </span>
+              }
+            />
           </ListItem>
         ))}
     </List>
   );
 
-  useEffect(() => {
-    if (isLoading) {
-      document.getElementById("refresh-chip").setAttribute("disabled", "");
+  const getBadgeWithValue = (data, color, icon) => {
+    let len = 0;
+    if (data) len = Object.keys(data).length;
+    console.log(len);
+    if (len > 0) {
+      return (
+        <Badge badgeContent={len} color={color}>
+          {icon}
+        </Badge>
+      );
     } else {
-      document.getElementById("refresh-chip").removeAttribute("disabled");
+      return icon;
     }
-  }, [isLoading]);
+  };
+
+  const refreshButton = (
+    <div>
+      {Object.keys(usersProfile).length > 0 && isLoading ? (
+        <Fab
+          size="small"
+          aria-label="refresh"
+          disabled
+          style={{
+            position: "fixed",
+            bottom: 58,
+            right: 8,
+            top: "auto",
+            left: "auto",
+          }}
+        >
+          {getBadgeWithValue(
+            usersProfile,
+            "secondary",
+            <CircularProgress size={30} />
+          )}
+        </Fab>
+      ) : (
+        <Fab
+          size="small"
+          color="primary"
+          aria-label="refresh"
+          onClick={handleOnClickRefresh}
+          style={{
+            position: "fixed",
+            bottom: 58,
+            right: 8,
+            top: "auto",
+            left: "auto",
+          }}
+        >
+          {getBadgeWithValue(usersProfile, "secondary", <RefreshOutlined />)}
+        </Fab>
+      )}
+    </div>
+  );
+
+  const updateButton = (
+    <div>
+      {Object.keys(unsavedUsersProfile).length > 0 &&
+        (isUpdating ? (
+          <Fab
+            size="small"
+            aria-label="update"
+            disabled
+            style={{
+              position: "fixed",
+              bottom: 110,
+              right: 8,
+              top: "auto",
+              left: "auto",
+            }}
+          >
+            {getBadgeWithValue(
+              unsavedUsersProfile,
+              "primary",
+              <CircularProgress size={30} color="secondary" />
+            )}
+          </Fab>
+        ) : (
+          <Fab
+            size="small"
+            color="secondary"
+            aria-label="update"
+            onClick={handleOnClickUpdate}
+            style={{
+              position: "fixed",
+              bottom: 110,
+              right: 8,
+              top: "auto",
+              left: "auto",
+            }}
+          >
+            {getBadgeWithValue(
+              unsavedUsersProfile,
+              "primary",
+              <UpdateOutlined />
+            )}
+          </Fab>
+        ))}
+    </div>
+  );
+
+  const exportButton = (
+    <div>
+      {Object.keys(storageData).length > 0 && (
+        <Fab
+          size="small"
+          aria-label="export"
+          color="primary"
+          onClick={handleExportProfileData}
+          style={{
+            position: "fixed",
+            bottom: 58,
+            right: 8,
+            top: "auto",
+            left: "auto",
+          }}
+        >
+          <GetAppRounded />
+        </Fab>
+      )}
+    </div>
+  );
+
+  const noUsersProfile = (
+    <p
+      style={{
+        fontFamily: "Georgia",
+        fontSize: "15px",
+        color: "#1c81a6",
+        textAlign: "center",
+      }}
+    >
+      <i>
+        Goto linkedin connection or search page and click the refresh button
+      </i>
+    </p>
+  );
+
+  const noStorageData = (
+    <p
+      style={{
+        fontFamily: "Georgia",
+        fontSize: "15px",
+        color: "#1c81a6",
+        textAlign: "center",
+      }}
+    >
+      <i>No Saved Profile</i>
+    </p>
+  );
+
+  const homeTab = (
+    <React.Fragment>
+      {isLinkedInTab && Object.keys(usersProfile).length > 0 ? (
+        <div>
+          <div className="users-profile">{populateUsers(usersProfile)}</div>
+          <div className="refresh-button">{refreshButton}</div>
+          <div className="update-button">{updateButton}</div>
+        </div>
+      ) : (
+        <div className="users-profile">{noUsersProfile}</div>
+      )}
+    </React.Fragment>
+  );
+
+  const savedTab = (
+    <React.Fragment>
+      {storageData.users_profile &&
+      Object.keys(storageData.users_profile).length > 0 ? (
+        <div>
+          <div className="users-profile">
+            {populateUsers(storageData.users_profile)}
+          </div>
+          <div className="export-button">{exportButton}</div>
+        </div>
+      ) : (
+        <div className="users-profile">{noStorageData}</div>
+      )}
+    </React.Fragment>
+  );
 
   return (
-    Object.entries(usersProfile).length > 0 && (
-      <div className="linkedin-tab">
-        <div className="navbar">{navbar}</div>
-        <div className="usersprofile">{populateUsers}</div>
-      </div>
-    )
+    <div className="linkedin-tab">
+      {bottomNavigationValue > 0 ? savedTab : homeTab}
+    </div>
   );
 };
 

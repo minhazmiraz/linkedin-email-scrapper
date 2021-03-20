@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Email Scrapper",
   "version": "0.1",
-  "description": "Scrape email",
+  "description": "Scrape user's email from linkedin connection and search page.",
   "permissions": [
     "tabs",
     "storage",
