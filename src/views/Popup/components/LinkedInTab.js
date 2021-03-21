@@ -1,5 +1,4 @@
 import {
-  AppBar,
   Avatar,
   Badge,
   CircularProgress,
@@ -8,8 +7,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  makeStyles,
-  Toolbar,
+  Tooltip,
   Typography,
 } from "@material-ui/core";
 import {
@@ -18,7 +16,7 @@ import {
   RefreshOutlined,
   UpdateOutlined,
 } from "@material-ui/icons";
-import React, { useEffect } from "react";
+import React from "react";
 import { exportAsCSV } from "../common/utils";
 
 const LinkedInTab = (props) => {
@@ -35,11 +33,24 @@ const LinkedInTab = (props) => {
     handleOnClickRefresh,
   } = props;
 
+  console.log(
+    isLoading,
+    isUpdating,
+    isLinkedInTab,
+    usersProfile,
+    savedUsersProfile,
+    unsavedUsersProfile,
+    storageData,
+    bottomNavigationValue,
+    handleOnClickUpdate,
+    handleOnClickRefresh
+  );
+
   const handleExportProfileData = () => {
     let replaceChar = (match) => (match === "," ? " | " : " ");
 
     let csvContent = "NAME,EMAIL,OCCUPATION,LINK,\n";
-    csvContent += Object.entries(storageData.users_profile)
+    csvContent += Object.entries(storageData)
       .map(
         (profile) =>
           profile[1].name.replace(/[,\n]/g, replaceChar) +
@@ -112,40 +123,44 @@ const LinkedInTab = (props) => {
   const refreshButton = (
     <div>
       {Object.keys(usersProfile).length > 0 && isLoading ? (
-        <Fab
-          size="small"
-          aria-label="refresh"
-          disabled
-          style={{
-            position: "fixed",
-            bottom: 58,
-            right: 8,
-            top: "auto",
-            left: "auto",
-          }}
-        >
-          {getBadgeWithValue(
-            usersProfile,
-            "secondary",
-            <CircularProgress size={30} />
-          )}
-        </Fab>
+        <Tooltip title="Refresh" placement="left">
+          <Fab
+            size="small"
+            aria-label="refresh"
+            disabled
+            style={{
+              position: "fixed",
+              bottom: 58,
+              right: 8,
+              top: "auto",
+              left: "auto",
+            }}
+          >
+            {getBadgeWithValue(
+              usersProfile,
+              "secondary",
+              <CircularProgress size={30} />
+            )}
+          </Fab>
+        </Tooltip>
       ) : (
-        <Fab
-          size="small"
-          color="primary"
-          aria-label="refresh"
-          onClick={handleOnClickRefresh}
-          style={{
-            position: "fixed",
-            bottom: 58,
-            right: 8,
-            top: "auto",
-            left: "auto",
-          }}
-        >
-          {getBadgeWithValue(usersProfile, "secondary", <RefreshOutlined />)}
-        </Fab>
+        <Tooltip title="Refresh" placement="left">
+          <Fab
+            size="small"
+            color="primary"
+            aria-label="refresh"
+            onClick={handleOnClickRefresh}
+            style={{
+              position: "fixed",
+              bottom: 58,
+              right: 8,
+              top: "auto",
+              left: "auto",
+            }}
+          >
+            {getBadgeWithValue(usersProfile, "secondary", <RefreshOutlined />)}
+          </Fab>
+        </Tooltip>
       )}
     </div>
   );
@@ -154,51 +169,55 @@ const LinkedInTab = (props) => {
     <div>
       {Object.keys(unsavedUsersProfile).length > 0 &&
         (isUpdating ? (
-          <Fab
-            size="small"
-            aria-label="update"
-            disabled
-            style={{
-              position: "fixed",
-              bottom: 110,
-              right: 8,
-              top: "auto",
-              left: "auto",
-            }}
-          >
-            {getBadgeWithValue(
-              unsavedUsersProfile,
-              "primary",
-              <CircularProgress size={30} color="secondary" />
-            )}
-          </Fab>
+          <Tooltip title="Fetch email" placement="left">
+            <Fab
+              size="small"
+              aria-label="update"
+              disabled
+              style={{
+                position: "fixed",
+                bottom: 110,
+                right: 8,
+                top: "auto",
+                left: "auto",
+              }}
+            >
+              {getBadgeWithValue(
+                unsavedUsersProfile,
+                "primary",
+                <CircularProgress size={30} color="secondary" />
+              )}
+            </Fab>
+          </Tooltip>
         ) : (
-          <Fab
-            size="small"
-            color="secondary"
-            aria-label="update"
-            onClick={handleOnClickUpdate}
-            style={{
-              position: "fixed",
-              bottom: 110,
-              right: 8,
-              top: "auto",
-              left: "auto",
-            }}
-          >
-            {getBadgeWithValue(
-              unsavedUsersProfile,
-              "primary",
-              <UpdateOutlined />
-            )}
-          </Fab>
+          <Tooltip title="Fetch email" placement="left">
+            <Fab
+              size="small"
+              color="secondary"
+              aria-label="update"
+              onClick={handleOnClickUpdate}
+              style={{
+                position: "fixed",
+                bottom: 110,
+                right: 8,
+                top: "auto",
+                left: "auto",
+              }}
+            >
+              {getBadgeWithValue(
+                unsavedUsersProfile,
+                "primary",
+                <UpdateOutlined />
+              )}
+            </Fab>
+          </Tooltip>
         ))}
     </div>
   );
 
   const exportButton = (
     <div>
-      {Object.keys(storageData).length > 0 && (
+      <Tooltip title="Export as CSV" placement="left">
         <Fab
           size="small"
           aria-label="export"
@@ -214,7 +233,7 @@ const LinkedInTab = (props) => {
         >
           <GetAppRounded />
         </Fab>
-      )}
+      </Tooltip>
     </div>
   );
 
@@ -262,12 +281,9 @@ const LinkedInTab = (props) => {
 
   const savedTab = (
     <React.Fragment>
-      {storageData.users_profile &&
-      Object.keys(storageData.users_profile).length > 0 ? (
+      {storageData && Object.keys(storageData).length > 0 ? (
         <div>
-          <div className="users-profile">
-            {populateUsers(storageData.users_profile)}
-          </div>
+          <div className="users-profile">{populateUsers(storageData)}</div>
           <div className="export-button">{exportButton}</div>
         </div>
       ) : (

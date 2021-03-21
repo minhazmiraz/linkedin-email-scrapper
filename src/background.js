@@ -24,6 +24,7 @@ const fetchEmail = (position, usersProfile) => {
         const emailAddress = detectEmailUsingRegex(res, user);
         const userId = user[0];
 
+        //Save to storage
         getDataFromStorage().then((storageResponse) => {
           let storageData = {};
           let users_profile = {};
@@ -47,8 +48,10 @@ const fetchEmail = (position, usersProfile) => {
           setDataInStorage(storageData).then((res) => {
             console.log("calling new fetch", position, usersProfile);
             if (position + 1 < usersProfile.length) {
+              //Fetch next email
               fetchEmail(position + 1, usersProfile);
             } else {
+              //toggle update flag
               getDataFromStorage().then((storageResponse) => {
                 setDataInStorage({
                   ...storageResponse,

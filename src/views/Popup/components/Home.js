@@ -140,14 +140,45 @@ function Home() {
         isLinkedInTab={isLinkedInTab}
         usersProfile={usersProfile}
         savedUsersProfile={savedUsersProfile}
-        storageData={storageData}
         bottomNavigationValue={bottomNavigationValue}
         unsavedUsersProfile={unsavedUsersProfile}
         handleOnClickUpdate={handleOnClickUpdate}
         handleOnClickRefresh={handleOnClickRefresh}
+        storageData={
+          storageData &&
+          storageData.users_profile &&
+          Object.entries(storageData.users_profile).reduce(
+            (obj, profile) =>
+              profile[1].email ? { ...obj, [profile[0]]: profile[1] } : obj,
+            {}
+          )
+        }
       />
     </div>
   );
 }
 
 export default Home;
+
+/* fetch(`https://app.mailrefine.com/api/v1/single-email-verify`, {
+  method: "POST",
+  headers: new Headers({
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  }),
+  body: JSON.stringify({
+    api_token:
+      "0fo9P19dyhVpxVs9f3juecwa0Pclyd07ezlfKTVwg1uFeTy3ol6AGapGswmAZ57iVw11e6txShE8ojtIda8rDDoWsvyKeWwolWd3",
+    email: "nadim.ice.nstu@gmail.com",
+  }),
+})
+  .then((res) => res.json())
+  .then((res) => console.log(res)); */
+
+/* query params:
+api_token=
+email=
+
+heeaders:
+Accept: application/json
+Content-Type: application/json */
