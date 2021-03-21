@@ -36,31 +36,43 @@ const scrapBasicProfileDataFromSearch = (profiles) => {
   return profiles.reduce((obj, user) => {
     let userProfileUrl = user.querySelector(
       "li .entity-result__content .entity-result__title a"
-    ).href;
-    if (userProfileUrl.slice(-1) !== "/") userProfileUrl += "/";
+    )?.href;
+    if (
+      userProfileUrl &&
+      userProfileUrl.indexOf("https://www.linkedin.com/in" !== -1)
+    ) {
+      if (userProfileUrl.slice(-1) !== "/") userProfileUrl += "/";
+    } else {
+      return obj;
+    }
     let userIdTmp = userProfileUrl.split("/");
     let userId = userProfileUrl.split("/")[userIdTmp.length - 2];
 
     let userProfileImage = user.querySelector("li .entity-result__image img")
-      .src;
-    let userName = user.querySelector("li .entity-result__image img").alt;
+      ?.src;
+    let userName = user.querySelector(
+      "li .entity-result__title-text [aria-hidden=true]"
+    )?.innerText;
     let userOccupation = user.querySelector(
       "li .entity-result__content .entity-result__primary-subtitle"
-    ).innerText;
-    return {
-      ...obj,
-      [userId]: {
-        url: userProfileUrl,
-        img: userProfileImage,
-        name: userName,
-        occ: userOccupation,
-      },
-    };
+    )?.innerText;
+
+    if (userProfileUrl && userName && userOccupation)
+      return {
+        ...obj,
+        [userId]: {
+          url: userProfileUrl,
+          img: userProfileImage,
+          name: userName,
+          occ: userOccupation,
+        },
+      };
+    else return obj;
   }, {});
 };
 
 const scrapLinkedInAllSearch = (port) => {
-  const ulElements = [
+  /* const ulElements = [
     ...document.querySelectorAll(
       "#main section.search-results__cluster-title-bar"
     ),
@@ -75,7 +87,9 @@ const scrapLinkedInAllSearch = (port) => {
         ...section.nextElementSibling.querySelectorAll("li"),
       ],
       []
-    );
+    ); */
+
+  const ulElements = [...document.querySelectorAll("#main ul li")];
 
   console.log("Ul: ", ulElements);
 

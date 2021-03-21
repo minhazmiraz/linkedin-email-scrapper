@@ -14,6 +14,7 @@ import {
 } from "@material-ui/core";
 import {
   GetAppRounded,
+  Person,
   RefreshOutlined,
   UpdateOutlined,
 } from "@material-ui/icons";
@@ -63,7 +64,12 @@ const LinkedInTab = (props) => {
         Object.values(profiles).map((user) => (
           <ListItem>
             <ListItemAvatar>
-              <Avatar src={user.img} />
+              {user.img && <Avatar src={user.img} />}
+              {!user.img && (
+                <Avatar>
+                  <Person />
+                </Avatar>
+              )}
             </ListItemAvatar>
             <ListItemText
               primary={<b>{user.name}</b>}
