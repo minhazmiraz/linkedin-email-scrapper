@@ -38,13 +38,7 @@ const BottomNav = (props) => {
           showLabels
         >
           <BottomNavigationAction label="Home" icon={<HomeRounded />} />
-          <BottomNavigationAction
-            label="Saved"
-            icon={getBadgeWithValue(
-              storageData.users_profile,
-              <AccountBoxRounded />
-            )}
-          />
+          <BottomNavigationAction label="Saved" icon={<AccountBoxRounded />} />
         </BottomNavigation>
       </AppBar>
       <Toolbar />

@@ -5,29 +5,29 @@ import {
 } from "./views/Popup/common/constant";
 
 const scrapLinkedInConnection = (port) => {
-  const scrapeData = [
-    ...document.querySelectorAll("#main ul li[id^='ember']"),
-  ].reduce((obj, user) => {
-    let userProfileUrl = user.querySelector(
-      "[data-control-name=connection_profile]"
-    ).href;
-    let userIdTmp = userProfileUrl.split("/");
-    let userId = userProfileUrl.split("/")[userIdTmp.length - 2];
+  const scrapeData = [...document.querySelectorAll("#main ul li")].reduce(
+    (obj, user) => {
+      let userProfileUrl = user.querySelector("a").href;
+      let userIdTmp = userProfileUrl.split("/");
+      let userId = userProfileUrl.split("/")[userIdTmp.length - 2];
 
-    let userProfileImage = user.querySelector("img").src;
-    let userName = user.querySelector("img").title;
-    let userOccupation = user.querySelector(".mn-connection-card__occupation")
-      .innerText;
-    return {
-      ...obj,
-      [userId]: {
-        url: userProfileUrl,
-        img: userProfileImage,
-        name: userName,
-        occ: userOccupation,
-      },
-    };
-  }, {});
+      let userProfileImage = user.querySelector("img").src;
+      let userName = user.querySelector("img").alt;
+      let userOccupation = user.querySelector(".mn-connection-card__occupation")
+        .innerText;
+      return {
+        ...obj,
+        [userId]: {
+          id: userId,
+          url: userProfileUrl,
+          img: userProfileImage,
+          name: userName,
+          occ: userOccupation,
+        },
+      };
+    },
+    {}
+  );
   console.log(scrapeData);
   port.postMessage(scrapeData);
 };
@@ -35,7 +35,7 @@ const scrapLinkedInConnection = (port) => {
 const scrapBasicProfileDataFromSearch = (profiles) => {
   return profiles.reduce((obj, user) => {
     let userProfileUrl = user.querySelector(
-      "li .entity-result__content .entity-result__title a"
+      ".entity-result__content .entity-result__title a"
     )?.href;
     if (
       userProfileUrl &&
@@ -48,19 +48,19 @@ const scrapBasicProfileDataFromSearch = (profiles) => {
     let userIdTmp = userProfileUrl.split("/");
     let userId = userProfileUrl.split("/")[userIdTmp.length - 2];
 
-    let userProfileImage = user.querySelector("li .entity-result__image img")
-      ?.src;
+    let userProfileImage = user.querySelector("img")?.src;
     let userName = user.querySelector(
-      "li .entity-result__title-text [aria-hidden=true]"
+      ".entity-result__title-text [aria-hidden=true]"
     )?.innerText;
     let userOccupation = user.querySelector(
-      "li .entity-result__content .entity-result__primary-subtitle"
+      ".entity-result__content .entity-result__primary-subtitle"
     )?.innerText;
 
     if (userProfileUrl && userName && userOccupation)
       return {
         ...obj,
         [userId]: {
+          id: userId,
           url: userProfileUrl,
           img: userProfileImage,
           name: userName,

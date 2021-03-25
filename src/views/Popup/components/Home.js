@@ -10,10 +10,11 @@ import {
   getDataFromStorage,
   removeStorageChangeListener,
   addStorageChangeListener,
+  setDataInStorage,
 } from "../common/utils";
 import BottomNav from "./BottomNav";
 import LinkedInTab from "./LinkedInTab";
-import NotLinkedInTab from "./NotLinkedInTab";
+import SavedProfilesTab from "./SavedProfilesTab";
 
 function Home() {
   const [usersProfile, setUsersProfile] = useState({});
@@ -23,6 +24,8 @@ function Home() {
   const [isLinkedInTab, setIsLinkedInTab] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [apiToken, setApiToken] = useState("");
+  const [apiTokenPopupOpen, setApiTokenPopupOpen] = useState(false);
   const [bottomNavigationValue, setBottomNavigationValue] = useState(0);
 
   const getCurrentTabUrl = () => {
@@ -49,11 +52,11 @@ function Home() {
 
     let [saved, unsaved] = Object.entries(input).reduce(
       ([saved, unsaved], user) => {
-        let profile =
-          storageData.users_profile && storageData.users_profile[user[0]];
-        return profile !== undefined && profile.email !== undefined
-          ? [{ ...saved, [user[0]]: profile }, unsaved]
-          : [saved, { ...unsaved, [user[0]]: user[1] }];
+        let profile = storageData?.users_profile?.[user[0]];
+
+        if (profile?.email?.length >= 0)
+          return [{ ...saved, [user[0]]: profile }, unsaved];
+        else return [saved, { ...unsaved, [user[0]]: user[1] }];
       },
       [{}, {}]
     );
@@ -88,11 +91,30 @@ function Home() {
     });
   };
 
-  const handleOnClickUpdate = () => {
+  const handleOnClickUpdate = (data) => {
     sentMessageToBackground(
-      { to: "background", query: "UPDATE_EMAIL", data: unsavedUsersProfile },
+      { to: "background", query: "UPDATE_EMAIL", data },
       (res) => console.log(res)
     );
+  };
+
+  const handleOnClickVerify = (data) => {
+    const payload = { to: "background", query: "VERIFY_SINGLE_EMAIL", data };
+    sentMessageToBackground(payload, (res) => console.log(res));
+  };
+
+  const handleApiTokenPopupOpen = () => {
+    setApiTokenPopupOpen(true);
+  };
+
+  const handleApiTokenPopupClose = () => {
+    setApiTokenPopupOpen(false);
+    getDataFromStorage().then((storageResponse) => {
+      setDataInStorage({
+        ...storageResponse,
+        api_token: apiToken,
+      });
+    });
   };
 
   const handleBottomNavigationValue = (event, newValue) => {
@@ -105,6 +127,7 @@ function Home() {
       if (res) {
         setStorageData(res);
         setIsUpdating(res.is_emails_updating);
+        if (res.api_token) setApiToken(res.api_token);
       }
     });
     addStorageChangeListener(storageChangeListener);
@@ -133,27 +156,37 @@ function Home() {
         usersProfile={usersProfile}
         storageData={storageData}
       />
-
-      <LinkedInTab
-        isLoading={isLoading}
-        isUpdating={isUpdating}
-        isLinkedInTab={isLinkedInTab}
-        usersProfile={usersProfile}
-        savedUsersProfile={savedUsersProfile}
-        bottomNavigationValue={bottomNavigationValue}
-        unsavedUsersProfile={unsavedUsersProfile}
-        handleOnClickUpdate={handleOnClickUpdate}
-        handleOnClickRefresh={handleOnClickRefresh}
-        storageData={
-          storageData &&
-          storageData.users_profile &&
-          Object.entries(storageData.users_profile).reduce(
-            (obj, profile) =>
-              profile[1].email ? { ...obj, [profile[0]]: profile[1] } : obj,
-            {}
-          )
-        }
-      />
+      {bottomNavigationValue > 0 ? (
+        <SavedProfilesTab
+          handleOnClickVerify={handleOnClickVerify}
+          handleApiTokenPopupOpen={handleApiTokenPopupOpen}
+          handleApiTokenPopupClose={handleApiTokenPopupClose}
+          setApiToken={setApiToken}
+          apiTokenPopupOpen={apiTokenPopupOpen}
+          apiToken={apiToken}
+          storageData={
+            storageData &&
+            storageData.users_profile &&
+            Object.entries(storageData.users_profile).reduce(
+              (obj, profile) =>
+                profile[1].email.length
+                  ? { ...obj, [profile[0]]: profile[1] }
+                  : obj,
+              {}
+            )
+          }
+        />
+      ) : (
+        <LinkedInTab
+          isLoading={isLoading}
+          isUpdating={isUpdating}
+          isLinkedInTab={isLinkedInTab}
+          usersProfile={usersProfile}
+          unsavedUsersProfile={unsavedUsersProfile}
+          handleOnClickUpdate={handleOnClickUpdate}
+          handleOnClickRefresh={handleOnClickRefresh}
+        />
+      )}
     </div>
   );
 }

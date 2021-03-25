@@ -21,7 +21,9 @@ const fetchEmail = (position, usersProfile) => {
     fetch(user[1].url + "detail/contact-info/")
       .then((res) => res.text())
       .then((res) => {
-        const emailAddress = detectEmailUsingRegex(res, user);
+        let emailAddress = detectEmailUsingRegex(res, user);
+        if (!emailAddress) emailAddress = "";
+
         const userId = user[0];
 
         //Save to storage
@@ -78,6 +80,78 @@ const fetchEmail = (position, usersProfile) => {
   }, 500);
 };
 
+const verifyEmail = (position, usersProfile, apiToken) => {
+  let user = usersProfile[position];
+  console.log(user);
+  setTimeout(() => {
+    fetch(`https://app.mailrefine.com/api/v1/single-email-verify`, {
+      method: "POST",
+      headers: new Headers({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify({
+        api_token: apiToken,
+        email: user[1].email,
+      }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log("response: ", res);
+
+        getDataFromStorage().then((storageResponse) => {
+          if (res.code === 200 && res.status === "valid") {
+            setDataInStorage({
+              ...storageResponse,
+              users_profile: {
+                ...storageResponse.users_profile,
+                [user[0]]: {
+                  ...user[1],
+                  email_verified: true,
+                  is_email_verifying: false,
+                },
+              },
+              is_emails_verifying: false,
+            });
+          } else {
+            setDataInStorage({
+              ...storageResponse,
+              users_profile: {
+                ...storageResponse.users_profile,
+                [user[0]]: {
+                  ...user[1],
+                  email_verified: false,
+                  is_email_verifying: false,
+                },
+              },
+              is_emails_verifying: false,
+            });
+          }
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        if (position + 1 < usersProfile.length) {
+          verifyEmail(position + 1, usersProfile, apiToken);
+        } else {
+          getDataFromStorage().then((storageResponse) => {
+            setDataInStorage({
+              ...storageResponse,
+              users_profile: {
+                ...storageResponse.users_profile,
+                [user[0]]: {
+                  ...user[1],
+                  is_email_verifying: false,
+                },
+              },
+              is_emails_verifying: false,
+            });
+          });
+        }
+      });
+  }, 500);
+};
+
 const msgToContent = (port, msg) => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     let tabPort = chrome.tabs.connect(tabs[0].id, {
@@ -100,6 +174,27 @@ const msgToBackground = (port, msg) => {
           is_emails_updating: true,
         }).then((res) => {
           fetchEmail(0, Object.entries(msg.data));
+        });
+      }
+    });
+  } else if (msg.query === "UPDATE_SINGLE_EMAIL") {
+  } else if (msg.query === "VERIFY_SINGLE_EMAIL") {
+    port.postMessage({ message: "message received" });
+    getDataFromStorage().then((storageResponse) => {
+      if (!storageResponse || storageResponse.api_token) {
+        console.log(storageResponse);
+        setDataInStorage({
+          ...storageResponse,
+          users_profile: {
+            ...storageResponse.users_profile,
+            [msg.data.id]: {
+              ...msg.data,
+              is_email_verifying: true,
+            },
+          },
+          is_emails_verifying: true,
+        }).then((res) => {
+          verifyEmail(0, [[msg.data.id, msg.data]], storageResponse.api_token);
         });
       }
     });
