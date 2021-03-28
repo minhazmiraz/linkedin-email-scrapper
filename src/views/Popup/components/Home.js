@@ -1,4 +1,13 @@
-import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+} from "@material-ui/core";
+import React, { createRef, useEffect, useState } from "react";
 import {
   LINKEDIN_ALL_SEARCH_URL,
   LINKEDIN_CONNECTION_URL,
@@ -15,6 +24,7 @@ import {
 import BottomNav from "./BottomNav";
 import LinkedInTab from "./LinkedInTab";
 import SavedProfilesTab from "./SavedProfilesTab";
+import SettingTab from "./SettingTab";
 
 function Home() {
   const [usersProfile, setUsersProfile] = useState({});
@@ -27,6 +37,8 @@ function Home() {
   const [apiToken, setApiToken] = useState("");
   const [apiTokenPopupOpen, setApiTokenPopupOpen] = useState(false);
   const [bottomNavigationValue, setBottomNavigationValue] = useState(0);
+  const domRef = React.createRef();
+  let tempTextAreaValue = "";
 
   const getCurrentTabUrl = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -107,19 +119,65 @@ function Home() {
     setApiTokenPopupOpen(true);
   };
 
-  const handleApiTokenPopupClose = () => {
+  const handleApiTokenPopupSaveButton = (value) => {
+    console.log(value);
     setApiTokenPopupOpen(false);
+    setApiToken(value);
     getDataFromStorage().then((storageResponse) => {
       setDataInStorage({
         ...storageResponse,
-        api_token: apiToken,
+        api_token: value,
       });
     });
+  };
+
+  const handleApiTokenPopupCancelButton = () => {
+    tempTextAreaValue = apiToken;
+    setApiTokenPopupOpen(false);
   };
 
   const handleBottomNavigationValue = (event, newValue) => {
     setBottomNavigationValue(newValue);
   };
+
+  const apiTokenPopup = () => (
+    <Dialog
+      open={apiTokenPopupOpen}
+      onClose={handleApiTokenPopupCancelButton}
+      aria-labelledby="form-dialog-title"
+    >
+      <DialogTitle id="form-dialog-title">Api Token</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Set api token to verify email address.{" "}
+          <a href="https://app.mailrefine.com/login" target="_blank">
+            Get Api key
+          </a>
+        </DialogContentText>
+        <TextField
+          id="outlined-multiline-static"
+          multiline
+          rows={4}
+          defaultValue={apiToken}
+          ref={domRef}
+          onChange={(e) => (tempTextAreaValue = e.target.value)}
+          variant="outlined"
+          fullWidth
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={() => handleApiTokenPopupSaveButton(tempTextAreaValue)}
+          color="primary"
+        >
+          Save
+        </Button>
+        <Button onClick={handleApiTokenPopupCancelButton} color="Secondary">
+          Cancel
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 
   useEffect(() => {
     getCurrentTabUrl();
@@ -156,14 +214,12 @@ function Home() {
         usersProfile={usersProfile}
         storageData={storageData}
       />
-      {bottomNavigationValue > 0 ? (
+      {bottomNavigationValue === 1 && (
         <SavedProfilesTab
           handleOnClickVerify={handleOnClickVerify}
           handleApiTokenPopupOpen={handleApiTokenPopupOpen}
-          handleApiTokenPopupClose={handleApiTokenPopupClose}
-          setApiToken={setApiToken}
-          apiTokenPopupOpen={apiTokenPopupOpen}
           apiToken={apiToken}
+          apiTokenPopup={apiTokenPopup}
           storageData={
             storageData &&
             storageData.users_profile &&
@@ -176,7 +232,8 @@ function Home() {
             )
           }
         />
-      ) : (
+      )}
+      {bottomNavigationValue === 0 && (
         <LinkedInTab
           isLoading={isLoading}
           isUpdating={isUpdating}
@@ -185,6 +242,12 @@ function Home() {
           unsavedUsersProfile={unsavedUsersProfile}
           handleOnClickUpdate={handleOnClickUpdate}
           handleOnClickRefresh={handleOnClickRefresh}
+        />
+      )}
+      {bottomNavigationValue === 2 && (
+        <SettingTab
+          handleApiTokenPopupOpen={handleApiTokenPopupOpen}
+          apiTokenPopup={apiTokenPopup}
         />
       )}
     </div>

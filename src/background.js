@@ -1,3 +1,4 @@
+import { PROJECT_NAME } from "./views/Popup/common/constant";
 import {
   getDataFromStorage,
   setDataInStorage,
@@ -58,6 +59,18 @@ const fetchEmail = (position, usersProfile) => {
                 setDataInStorage({
                   ...storageResponse,
                   is_emails_updating: false,
+                }).then((res) => {
+                  chrome.notifications.create(
+                    PROJECT_NAME,
+                    {
+                      title: "Mail Refine",
+                      type: "basic",
+                      message:
+                        "Email fetching is completed. For checking emails, open Mail-Refine chrome extension and goto saved tab.",
+                      iconUrl: "/logo.png",
+                    },
+                    (notiId) => console.log("Mail refine Notification Created")
+                  );
                 });
               });
             }

@@ -1,11 +1,17 @@
 import {
   AppBar,
+  Avatar,
   Badge,
   BottomNavigation,
   BottomNavigationAction,
+  Grid,
   Toolbar,
 } from "@material-ui/core";
-import { AccountBoxRounded, HomeRounded } from "@material-ui/icons";
+import {
+  AccountBoxRounded,
+  MailRounded,
+  SettingsApplications,
+} from "@material-ui/icons";
 
 const BottomNav = (props) => {
   const {
@@ -31,15 +37,37 @@ const BottomNav = (props) => {
 
   return (
     <div className="bottom-nav">
-      <AppBar position="fixed" color="default" style={{ height: "auto" }}>
-        <BottomNavigation
-          value={bottomNavigationValue}
-          onChange={handleBottomNavigationValue}
-          showLabels
-        >
-          <BottomNavigationAction label="Home" icon={<HomeRounded />} />
-          <BottomNavigationAction label="Saved" icon={<AccountBoxRounded />} />
-        </BottomNavigation>
+      <AppBar position="fixed" style={{ height: "auto" }} color="">
+        <Grid justify={"space-between"} container>
+          <Grid xs item>
+            <img
+              src="logo.png"
+              width="180px"
+              height="35px"
+              style={{ marginTop: "5px", marginLeft: "10px" }}
+            />
+          </Grid>
+          <Grid xs item>
+            <BottomNavigation
+              value={bottomNavigationValue}
+              onChange={handleBottomNavigationValue}
+              showLabels
+            >
+              <BottomNavigationAction
+                label="Profiles"
+                icon={<AccountBoxRounded />}
+              />
+              <BottomNavigationAction label="Saved" icon={<MailRounded />} />
+              <BottomNavigationAction
+                label="Setting"
+                icon={<SettingsApplications />}
+              />
+            </BottomNavigation>
+          </Grid>
+          <Grid xs item>
+            {null}
+          </Grid>
+        </Grid>
       </AppBar>
       <Toolbar />
     </div>

@@ -1,9 +1,4 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  TextField,
   Avatar,
   Badge,
   Button,
@@ -12,6 +7,7 @@ import {
   List,
   ListItem,
   ListItemAvatar,
+  ListItemIcon,
   ListItemSecondaryAction,
   ListItemText,
   Tooltip,
@@ -32,11 +28,9 @@ const SavedProfilesTab = (props) => {
   const {
     storageData,
     apiToken,
-    apiTokenPopupOpen,
-    setApiToken,
     handleOnClickVerify,
     handleApiTokenPopupOpen,
-    handleApiTokenPopupClose,
+    apiTokenPopup,
   } = props;
 
   const handleExportProfileData = () => {
@@ -76,33 +70,6 @@ const SavedProfilesTab = (props) => {
       return icon;
     }
   };
-
-  const apiTokenPopup = (
-    <Dialog
-      open={apiTokenPopupOpen}
-      onClose={handleApiTokenPopupClose}
-      aria-labelledby="form-dialog-title"
-    >
-      <DialogTitle id="form-dialog-title">Api Token</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Set api token to verify email address.{" "}
-          <a href="https://app.mailrefine.com/login" target="_blank">
-            Get Api key
-          </a>
-        </DialogContentText>
-        <TextField
-          id="outlined-multiline-static"
-          multiline
-          rows={4}
-          variant="outlined"
-          value={apiToken}
-          onChange={(e) => setApiToken(e.target.value)}
-          fullWidth
-        />
-      </DialogContent>
-    </Dialog>
-  );
 
   const populateUsers = (profiles) => (
     <List component="ul">
@@ -154,13 +121,12 @@ const SavedProfilesTab = (props) => {
               }}
             />
             {!user.is_email_verifying && (
-              <ListItemSecondaryAction>
+              <ListItemIcon>
                 {user.email_verified === true && (
                   <CheckCircle
                     style={{
                       fill: "green",
-                      marginTop: "10px",
-                      marginRight: "10px",
+                      marginRight: "40px",
                     }}
                   />
                 )}
@@ -168,11 +134,15 @@ const SavedProfilesTab = (props) => {
                   <Cancel
                     style={{
                       fill: "red",
-                      marginTop: "10px",
-                      marginRight: "10px",
+                      marginRight: "40px",
                     }}
                   />
                 )}
+              </ListItemIcon>
+            )}
+
+            {!user.is_email_verifying && (
+              <ListItemSecondaryAction>
                 <Button
                   color="primary"
                   style={{
@@ -273,7 +243,7 @@ const SavedProfilesTab = (props) => {
       ) : (
         <div className="users-profile">{noStorageData}</div>
       )}
-      {apiTokenPopup}
+      {apiTokenPopup()}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 .linkedin-tab,
-.saved-profiles-tab {
+.saved-profiles-tab,
+.setting-tab {
   width: 450px;
   height: 450px;
 }

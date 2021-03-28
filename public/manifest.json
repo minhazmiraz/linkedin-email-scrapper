@@ -1,12 +1,13 @@
 {
   "manifest_version": 2,
-  "name": "Email Scrapper",
+  "name": "Mail Refine",
   "version": "0.1",
-  "description": "Scrape user's email from linkedin connection and search page.",
+  "description": "Scrape user's email from linkedin connection and verify those emails.",
   "permissions": [
     "tabs",
     "storage",
     "identity",
+    "notifications",
     "unlimitedStorage",
     "https://www.linkedin.com/*",
     "https://api.linkedin.com/*"
