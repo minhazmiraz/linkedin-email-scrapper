@@ -1,39 +1,39 @@
 {
-  "manifest_version": 2,
-  "name": "Mail Refine",
-  "version": "0.1",
-  "description": "Scrape user's email from linkedin connection and verify those emails.",
-  "permissions": [
-    "tabs",
-    "storage",
-    "identity",
-    "notifications",
-    "unlimitedStorage",
-    "https://www.linkedin.com/*",
-    "https://api.linkedin.com/*"
-  ],
-  "background": {
-    "scripts": ["static/js/background.js"],
-    "persistent": false
-  },
-  "content_scripts": [
-    {
-      "js": ["static/js/content.js"],
-      "matches": ["http://*.linkedin.com/*", "https://*.linkedin.com/*"],
-      "run_at": "document_idle"
-    }
-  ],
-  "icons": {
-    "192": "logo192.png"
-  },
-  "browser_action": {
-    "default_icon": {
-      "192": "logo192.png"
-    },
-    "default_title": "Popup",
-    "default_popup": "popup.html"
-  },
-  "options_ui": {
-    "page": "options.html"
-  }
+	"manifest_version": 2,
+	"name": "Linkedin Email Scrapper",
+	"version": "0.1",
+	"description": "Scrape user's email from linkedin connection and verify those emails.",
+	"permissions": [
+		"tabs",
+		"storage",
+		"identity",
+		"notifications",
+		"unlimitedStorage",
+		"https://www.linkedin.com/*",
+		"https://api.linkedin.com/*"
+	],
+	"background": {
+		"scripts": ["static/js/background.js"],
+		"persistent": false
+	},
+	"content_scripts": [
+		{
+			"js": ["static/js/content.js"],
+			"matches": ["http://*.linkedin.com/*", "https://*.linkedin.com/*"],
+			"run_at": "document_idle"
+		}
+	],
+	"icons": {
+		"192": "logo192.png"
+	},
+	"browser_action": {
+		"default_icon": {
+			"192": "logo192.png"
+		},
+		"default_title": "Popup",
+		"default_popup": "popup.html"
+	},
+	"options_ui": {
+		"page": "options.html"
+	}
 }
