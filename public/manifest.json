@@ -23,6 +23,7 @@
 			"run_at": "document_idle"
 		}
 	],
+	"content_security_policy": "script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
 	"icons": {
 		"192": "logo192.png"
 	},

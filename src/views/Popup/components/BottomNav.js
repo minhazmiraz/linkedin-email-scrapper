@@ -46,15 +46,15 @@ const BottomNav = (props) => {
 						>
 							<BottomNavigationAction label="Profiles" icon={<AccountBoxRounded />} />
 							<BottomNavigationAction label="Saved" icon={<MailRounded />} />
-							<BottomNavigationAction
+							{/* <BottomNavigationAction
 								label="Setting"
 								icon={<SettingsApplications />}
-							/>
+							/> */}
 						</BottomNavigation>
 					</Grid>
-					<Grid xs item>
+					{/* <Grid xs item>
 						{null}
-					</Grid>
+					</Grid> */}
 				</Grid>
 			</AppBar>
 			<Toolbar />

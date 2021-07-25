@@ -56,14 +56,18 @@ const LinkedInTab = (props) => {
 							primary={<b>{user.name}</b>}
 							secondary={
 								<span>
-									{user.email && (
+									{user.email?.length >= 0 && (
 										<Typography
 											component="span"
 											variant="body2"
 											color="textPrimary"
 											display="inline"
 										>
-											{user.email.length ? user.email : "Email Not Found"}
+											{user.email?.length ? (
+												user.email
+											) : (
+												<span style={{ color: "red" }}>Private email</span>
+											)}
 											<br />
 										</Typography>
 									)}
