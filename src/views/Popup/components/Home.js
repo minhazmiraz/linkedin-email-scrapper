@@ -1,12 +1,3 @@
-import {
-	Button,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogContentText,
-	DialogTitle,
-	TextField,
-} from "@material-ui/core";
 import React, { createRef, useEffect, useState } from "react";
 import {
 	LINKEDIN_ALL_SEARCH_URL,
@@ -19,12 +10,10 @@ import {
 	getDataFromStorage,
 	removeStorageChangeListener,
 	addStorageChangeListener,
-	setDataInStorage,
 } from "../common/utils";
 import BottomNav from "./BottomNav";
 import LinkedInTab from "./LinkedInTab";
 import SavedProfilesTab from "./SavedProfilesTab";
-import SettingTab from "./SettingTab";
 
 function Home() {
 	const [usersProfile, setUsersProfile] = useState({});
@@ -107,6 +96,10 @@ function Home() {
 		setBottomNavigationValue(newValue);
 	};
 
+	const handleOnClickUpdateSavedEmail = (user) => {
+		handleOnClickUpdate([user]);
+	};
+
 	useEffect(() => {
 		getCurrentTabUrl();
 		getDataFromStorage().then((res) => {
@@ -142,7 +135,11 @@ function Home() {
 				storageData={storageData}
 			/>
 			{bottomNavigationValue === 1 && (
-				<SavedProfilesTab storageData={storageData && storageData?.users_profile} />
+				<SavedProfilesTab
+					storageData={storageData && storageData?.users_profile}
+					isEmailsUpdating={storageData && storageData?.is_emails_updating}
+					handleOnClickUpdateSavedEmail={handleOnClickUpdateSavedEmail}
+				/>
 			)}
 			{bottomNavigationValue === 0 && (
 				<LinkedInTab

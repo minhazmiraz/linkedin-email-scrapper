@@ -4,6 +4,7 @@
 	"version": "0.1",
 	"description": "Scrape user's email from linkedin connection and verify those emails.",
 	"permissions": [
+		"alarms",
 		"tabs",
 		"storage",
 		"identity",

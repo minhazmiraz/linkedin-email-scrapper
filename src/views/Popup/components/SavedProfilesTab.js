@@ -1,31 +1,22 @@
 import {
 	Avatar,
-	Badge,
 	Button,
-	CircularProgress,
 	Fab,
 	List,
 	ListItem,
 	ListItemAvatar,
-	ListItemIcon,
 	ListItemSecondaryAction,
 	ListItemText,
 	Tooltip,
 	Typography,
 } from "@material-ui/core";
-import {
-	Cancel,
-	CheckCircle,
-	GetAppRounded,
-	Person,
-	VerifiedUserOutlined,
-} from "@material-ui/icons";
+import { GetAppRounded, Person } from "@material-ui/icons";
 import React from "react";
 import { exportAsCSV } from "../common/utils";
 import Alert from "@material-ui/lab/Alert";
 
 const SavedProfilesTab = (props) => {
-	const { storageData } = props;
+	const { storageData, isEmailsUpdating, handleOnClickUpdateSavedEmail } = props;
 
 	const handleExportProfileData = () => {
 		let replaceChar = (match) => (match === "," ? " | " : " ");
@@ -53,58 +44,98 @@ const SavedProfilesTab = (props) => {
 	const populateUsers = (profiles) => (
 		<List component="ul">
 			{profiles &&
-				Object.values(profiles).map((user) => (
-					<ListItem>
-						<ListItemAvatar>
-							{user.img && <Avatar src={user.img} />}
-							{!user.img && (
-								<Avatar>
-									<Person />
-								</Avatar>
+				Object.entries(profiles).map((profile) => {
+					let userId = profile[0];
+					let user = profile[1];
+					return (
+						<ListItem>
+							<ListItemAvatar>
+								{user.img && <Avatar src={user.img} />}
+								{!user.img && (
+									<Avatar>
+										<Person />
+									</Avatar>
+								)}
+							</ListItemAvatar>
+							<ListItemText
+								primary={<b>{user.name}</b>}
+								secondary={
+									<span>
+										{
+											<Typography
+												component="div"
+												variant="body2"
+												color="textPrimary"
+											>
+												{user.email?.length ? (
+													user.email
+												) : (
+													<span style={{ color: "red" }}>
+														Private email
+													</span>
+												)}
+												<br />
+											</Typography>
+										}
+										{user.occ}
+									</span>
+								}
+								primaryTypographyProps={{
+									style: {
+										fontSize: "15px",
+										whiteSpace: "nowrap",
+										width: "250px",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+									},
+								}}
+								secondaryTypographyProps={{
+									style: {
+										fontSize: "12px",
+										whiteSpace: "nowrap",
+										width: "250px",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+									},
+								}}
+							/>
+							{!isEmailsUpdating && (
+								<ListItemSecondaryAction>
+									<Button
+										color="primary"
+										style={{
+											maxWidth: "50px",
+											maxHeight: "30px",
+											fontSize: "10px",
+										}}
+										variant="contained"
+										onClick={() =>
+											handleOnClickUpdateSavedEmail({ [userId]: user })
+										}
+									>
+										Update
+									</Button>
+								</ListItemSecondaryAction>
 							)}
-						</ListItemAvatar>
-						<ListItemText
-							primary={<b>{user.name}</b>}
-							secondary={
-								<span>
-									{
-										<Typography
-											component="div"
-											variant="body2"
-											color="textPrimary"
-										>
-											{user.email?.length ? (
-												user.email
-											) : (
-												<span style={{ color: "red" }}>Private email</span>
-											)}
-											<br />
-										</Typography>
-									}
-									{user.occ}
-								</span>
-							}
-							primaryTypographyProps={{
-								style: {
-									fontSize: "15px",
-									whiteSpace: "nowrap",
-									width: "250px",
-									overflow: "hidden",
-									textOverflow: "ellipsis",
-								},
-							}}
-							secondaryTypographyProps={{
-								style: {
-									fontSize: "12px",
-									whiteSpace: "nowrap",
-									width: "250px",
-									overflow: "hidden",
-									textOverflow: "ellipsis",
-								},
-							}}
-						/>
-					</ListItem>
-				))}
+
+							{isEmailsUpdating && (
+								<ListItemSecondaryAction>
+									<Button
+										style={{
+											maxWidth: "50px",
+											maxHeight: "30px",
+											fontSize: "10px",
+										}}
+										variant="contained"
+										disabled
+									>
+										Update
+									</Button>
+								</ListItemSecondaryAction>
+							)}
+						</ListItem>
+					);
+				})}
 		</List>
 	);
 

@@ -30,6 +30,21 @@ const createNotification = (notificationId, notificationData) => {
 	);
 };
 
+/* chrome.alarms.create("test-alarm", {
+	when: Date.now() + 1 * 60000,
+	periodInMinutes: 1,
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+	console.log(alarm);
+	createNotification("test alarm", {
+		title: "test alarm",
+		type: "basic",
+		message: "test alarm",
+		iconUrl: "/logo.png",
+	});
+}); */
+
 const detectEmailUsingRegex = (res, user) => {
 	if (!res) {
 		return console.log(user[0], " response failed") || null;
